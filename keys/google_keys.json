@@ -1,0 +1,16 @@
+{
+  "web": {
+    "client_id": "244063115889-v0n2cf605kh8kr876vv3f7kofs7f5ian.apps.googleusercontent.com",
+    "project_id": "ytcomments-376806",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "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",
+    "javascript_origins": [
+      "http://localhost:3000",
+      "http://localhost",
+      "http://localhost:5000"
+    ],
+    "scopes": ["https://www.googleapis.com/auth/youtube.readonly"]
+  }
+}
