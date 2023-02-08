@@ -20,6 +20,7 @@ app.use(
 app.use(morgan("dev"));
 app.use(
   cors({
+    origin: "https://yt-comments-ui.vercel.app",
     optionSuccessStatus: 200,
   })
 );
