@@ -2,8 +2,8 @@ import { generateText } from "./chatgpt2.utilities";
 import qs from "qs";
 import URL from "url";
 const axios = require("axios");
-
-const YT_API_KEY = "AIzaSyB16XM3fFzZZJJgStI0ba5yyKw8K7pGqZ8";
+require("dotenv").config();
+const YT_API_KEY = process.env.YT_KEY;
 // const VIDEO_ID = "nyRq9qWv9W0";
 const VIDEO_ID = "PSoECRce9_o";
 
@@ -18,6 +18,7 @@ const VIDEO_IDS = [
 
 const getVideoDetails = async (videoIds = []) => {
   const videoIdsString = videoIds.join(",");
+  console.log("======", YT_API_KEY);
   const VIDEO_DETAILS_URL = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIdsString}&key=${YT_API_KEY}`;
   try {
     const videoDetails = await axios.get(VIDEO_DETAILS_URL);
@@ -78,6 +79,7 @@ export const generateSentimentalTextOnComments = async (videoData) => {
       }
     })
     .catch((err) => {
+      console.log(err);
       return {
         contentId: videoData.id,
         title: videoData.title,
@@ -90,7 +92,7 @@ export const generateSentimentalTextOnComments = async (videoData) => {
 export const getDataOnSentimentalAnalysis = async ({ videoUrls }) => {
   const videoIds = videoUrls.map(({ url }) => extractIdsFromYTVidUrl(url));
   const videoDetails = await getVideoDetails(videoIds);
-
+  console.log("VIDEO DETAILS ", videoDetails);
   const videoMetadata = videoIds.map((v_id) => {
     return videoDetails[v_id];
   });
