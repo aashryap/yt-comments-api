@@ -10,6 +10,13 @@ class SentimentRoute extends Route {
     this.router = router;
     this.routeConfig = [
       {
+        name: "/",
+        method: "get",
+        scope: constants.SCOPES.NOSCOPE,
+        controller: (req, cb) => cb(200, "Yt Comments APi"),
+        auth: false,
+      },
+      {
         name: "/sentiment",
         method: "post",
         scope: constants.SCOPES.NOSCOPE,
