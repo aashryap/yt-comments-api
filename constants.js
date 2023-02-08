@@ -3,7 +3,7 @@ const PASSWORD = "Abc123";
 const constants = {
   //   DB_URI: 'mongodb://localhost:27017/dnomrm_db',
   DB_URI: `mongodb+srv://${USERNAME}:${PASSWORD}@cluster0.e61pz7c.mongodb.net/?retryWrites=true&w=majority`,
-  PORT: 4000,
+  PORT: process.env.PORT || 4000,
   SCOPES: {
     SUPERADMIN: [1],
     ADMIN: [2],
