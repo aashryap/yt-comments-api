@@ -69,9 +69,10 @@ const removeUnwantedStringFromSentiment = (sentimentString) => {
   const splittedString = sentimentString.split("\n\n");
   if (splittedString.length > 1) {
     return splittedString[1];
-  } else {
-    return sentimentString;
+  } else if (sentimentString.split("\n").length > 1) {
+    return sentimentString.split("\n")[1];
   }
+  return sentimentString;
 };
 
 export const generateSentimentalTextOnComments = async (videoData) => {
@@ -82,6 +83,7 @@ export const generateSentimentalTextOnComments = async (videoData) => {
           let sentimenalSummary = await generateText(
             getYTSentimentalAnalysisQuery(comments)
           );
+          console.log("generated sentimentalSummary : ", { sentimenalSummary });
           const correctedSentimentString =
             removeUnwantedStringFromSentiment(sentimenalSummary);
           return {
