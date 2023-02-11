@@ -4,17 +4,6 @@ import URL from "url";
 const axios = require("axios");
 require("dotenv").config();
 const YT_API_KEY = process.env.YT_KEY;
-// const VIDEO_ID = "nyRq9qWv9W0";
-const VIDEO_ID = "PSoECRce9_o";
-
-const VIDEO_IDS = [
-  "PSoECRce9_o",
-  "BrDrUZjcSkg",
-  "2coIKErAxUY",
-  "wi4pWa9UrOE",
-  "oe-sSKvDImM",
-  "bK0IYpsCA3E",
-];
 
 const getVideoDetails = async (videoIds = []) => {
   const videoIdsString = videoIds.join(",");
@@ -52,45 +41,85 @@ const getComments = async (videoId) => {
 
 const getYTSentimentalAnalysisQuery = (comments = "") => {
   comments = comments.slice(0, 50);
-  return `Give me sentimental analysis of a youtube video based on these comments : + 
+  return `Give me sentimental analysis of a youtube video based on these comments and do not include any comments in the video : + 
           ${comments}`;
 };
 
 export const generateSentimentalTextOnComments = async (videoData) => {
-  return getComments(videoData.id)
-    .then(async (comments) => {
-      //   console.log("COMMENTS ", comments);
-      if (comments && comments.length > 0) {
-        let sentimenalSummary = await generateText(
-          getYTSentimentalAnalysisQuery(comments)
-        );
-        return {
-          contentId: videoData.id,
-          title: videoData.title,
-          sentimenalSummary,
-        };
-      } else {
+  if (videoData) {
+    return getComments(videoData.id)
+      .then(async (comments) => {
+        if (comments && comments.length > 0) {
+          let sentimenalSummary = await generateText(
+            getYTSentimentalAnalysisQuery(comments)
+          );
+          return {
+            contentId: videoData.id,
+            title: videoData.title,
+            sentimenalSummary,
+          };
+        } else {
+          return {
+            contentId: videoData.id,
+            title: videoData.title,
+            sentimenalSummary:
+              "Not able to generate sentiment analysis summary because no comments present on the video",
+          };
+        }
+      })
+      .catch((err) => {
+        console.log(err);
         return {
           contentId: videoData.id,
           title: videoData.title,
           sentimenalSummary:
-            "Not able to generate sentiment analysis summary because no comments present on the video",
+            "Error genrating sentimental analysis for this video",
         };
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      return {
-        contentId: videoData.id,
-        title: videoData.title,
-        sentimenalSummary:
-          "Error genrating sentimental analysis for this video",
-      };
+      });
+  } else {
+    return Promise.reject({
+      contentId: null,
+      title: null,
+      sentimenalSummary: "Not able to find details for this video",
     });
+  }
+};
+
+const validateUrlAndGetPlatform = (url) => {
+  const webUrls = ["youtube.com", "www.youtube.com"];
+  const mobileUrls = ["youtu.be"];
+  const hostName = URL.parse(url, true).hostname;
+  if (webUrls.includes(hostName)) {
+    return {
+      isValidUrl: true,
+      platform: "web",
+    };
+  } else if (mobileUrls.includes(hostName)) {
+    return {
+      isValidUrl: true,
+      platform: "mobile",
+    };
+  }
+  return {
+    isValidUrl: false,
+    platform: null,
+  };
 };
 
 export const getDataOnSentimentalAnalysis = async ({ videoUrls }) => {
-  const videoIds = videoUrls.map(({ url }) => extractIdsFromYTVidUrl(url));
+  const videoIds = videoUrls
+    .map(({ url }) => {
+      const obj = validateUrlAndGetPlatform(url);
+      if (obj.isValidUrl) {
+        return obj.platform === "web"
+          ? extractIdsFromYTVidUrlWeb(url)
+          : extractIdsFromYTVidUrlMobile(url);
+      }
+      return null;
+    })
+    .filter((d) => {
+      return d !== null;
+    });
   const videoDetails = await getVideoDetails(videoIds);
   console.log("VIDEO DETAILS ", videoDetails);
   const videoMetadata = videoIds.map((v_id) => {
@@ -114,10 +143,16 @@ export const getDataOnSentimentalAnalysis = async ({ videoUrls }) => {
   });
 };
 
-export const extractIdsFromYTVidUrl = (url) => {
+const extractIdsFromYTVidUrlWeb = (url) => {
   const parsedUrl = URL.parse(url, true);
   const params = qs.parse(parsedUrl.query, { ignoreQueryPrefix: true });
   return params.v;
+};
+
+const extractIdsFromYTVidUrlMobile = (url) => {
+  const parsedUrl = URL.parse(url, true);
+  const pathParams = parsedUrl.path.split("/");
+  return pathParams[1];
 };
 
 export const getYoutubeVideoListForAChannel = ({ channel_id }) => {
