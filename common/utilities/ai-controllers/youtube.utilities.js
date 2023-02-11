@@ -14,10 +14,30 @@ const getVideoDetails = async (videoIds = []) => {
     console.log("VIDEO DETAILS ", videoDetails.data.items);
     const videoMetadata = {};
     videoDetails.data.items.forEach((videoDetail) => {
+      console.log("ENGAGEMENT COUNT ", {
+        commentCount: videoDetail.statistics.commentCount,
+        likesCount: videoDetail.statistics.likeCount,
+        viewCount: videoDetail.statistics.viewCount,
+        engagement:
+          (
+            (parseInt(videoDetail.statistics.commentCount) +
+              parseInt(videoDetail.statistics.likeCount)) /
+            parseInt(videoDetail.statistics.viewCount)
+          ).toFixed(2) * 100,
+      });
       videoMetadata[videoDetail.id] = {
         id: videoDetail.id,
         title: videoDetail.snippet.title,
         channelId: videoDetail.snippet.channelId,
+        likeCount: videoDetail.statistics.likeCount,
+        viewCount: videoDetail.statistics.viewCount,
+        commentCount: videoDetail.statistics.commentCount,
+        engagement:
+          (
+            (parseInt(videoDetail.statistics.commentCount) +
+              parseInt(videoDetail.statistics.likeCount)) /
+            parseInt(videoDetail.statistics.viewCount)
+          ).toFixed(2) * 100,
       };
     });
     return videoMetadata;
@@ -45,6 +65,15 @@ const getYTSentimentalAnalysisQuery = (comments = "") => {
           ${comments}`;
 };
 
+const removeUnwantedStringFromSentiment = (sentimentString) => {
+  const splittedString = sentimentString.split("\n\n");
+  if (splittedString.length > 1) {
+    return splittedString[1];
+  } else {
+    return sentimentString;
+  }
+};
+
 export const generateSentimentalTextOnComments = async (videoData) => {
   if (videoData) {
     return getComments(videoData.id)
@@ -53,10 +82,16 @@ export const generateSentimentalTextOnComments = async (videoData) => {
           let sentimenalSummary = await generateText(
             getYTSentimentalAnalysisQuery(comments)
           );
+          const correctedSentimentString =
+            removeUnwantedStringFromSentiment(sentimenalSummary);
           return {
             contentId: videoData.id,
             title: videoData.title,
-            sentimenalSummary,
+            sentimenalSummary: correctedSentimentString,
+            engagement: videoData.engagement,
+            likeCount: videoData.likeCount,
+            commentCount: videoData.commentCount,
+            viewCount: videoData.viewCount,
           };
         } else {
           return {
@@ -64,6 +99,10 @@ export const generateSentimentalTextOnComments = async (videoData) => {
             title: videoData.title,
             sentimenalSummary:
               "Not able to generate sentiment analysis summary because no comments present on the video",
+            engagement: videoData.engagement,
+            likeCount: videoData.likeCount,
+            commentCount: videoData.commentCount,
+            viewCount: videoData.viewCount,
           };
         }
       })
