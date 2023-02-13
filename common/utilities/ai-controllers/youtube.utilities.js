@@ -131,14 +131,20 @@ const validateUrlAndGetPlatform = (url) => {
   const mobileUrls = ["youtu.be"];
   const hostName = URL.parse(url, true).hostname;
   if (webUrls.includes(hostName)) {
+    const metadata = getContentMetadata(url, "web");
     return {
       isValidUrl: true,
       platform: "web",
+      id: metadata.id,
+      contentType: metadata.type,
     };
   } else if (mobileUrls.includes(hostName)) {
+    const metadata = getContentMetadata(url, "mobile");
     return {
       isValidUrl: true,
       platform: "mobile",
+      id: metadata.id,
+      contentType: metadata.type,
     };
   }
   return {
@@ -147,14 +153,42 @@ const validateUrlAndGetPlatform = (url) => {
   };
 };
 
+const getContentMetadata = (url, platform) => {
+  const parsedUrl = URL.parse(url, true);
+  const pathParams = parsedUrl.path.split("/");
+  console.log("PARSED URL ", {
+    parsedUrl,
+  });
+  const type = pathParams[1];
+  switch (type) {
+    case "shorts":
+      return {
+        contentType: "shorts",
+        id: pathParams[2],
+      };
+    case "live":
+      return {
+        contentType: "live",
+        id: pathParams[2],
+      };
+    default:
+      return {
+        contentType: "video",
+        id:
+          platform === "web"
+            ? extractIdsFromYTVidUrlWeb(url)
+            : extractIdsFromYTVidUrlMobile(url),
+      };
+  }
+};
+
 export const getDataOnSentimentalAnalysis = async ({ videoUrls }) => {
   const videoIds = videoUrls
     .map(({ url }) => {
       const obj = validateUrlAndGetPlatform(url);
+      console.log("VALIDATED URL ", obj);
       if (obj.isValidUrl) {
-        return obj.platform === "web"
-          ? extractIdsFromYTVidUrlWeb(url)
-          : extractIdsFromYTVidUrlMobile(url);
+        return obj.id;
       }
       return null;
     })
@@ -183,6 +217,8 @@ export const getDataOnSentimentalAnalysis = async ({ videoUrls }) => {
       });
   });
 };
+
+const extractIdFromShortsUrl = (path) => {};
 
 const extractIdsFromYTVidUrlWeb = (url) => {
   const parsedUrl = URL.parse(url, true);
