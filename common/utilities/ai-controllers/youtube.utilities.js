@@ -155,10 +155,7 @@ const validateUrlAndGetPlatform = (url) => {
 
 const getContentMetadata = (url, platform) => {
   const parsedUrl = URL.parse(url, true);
-  const pathParams = parsedUrl.path.split("/");
-  console.log("PARSED URL ", {
-    parsedUrl,
-  });
+  const pathParams = parsedUrl.pathname.split("/");
   const type = pathParams[1];
   switch (type) {
     case "shorts":
